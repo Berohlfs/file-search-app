@@ -1,26 +1,37 @@
-// Components
-import { ModeToggle } from "./components/mode-toggle"
 // Drizzle
 import { db } from "@/db/db-client"
 import { files } from "@/db/schema/files"
+// Shadcn
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+// Components
+import { UploadForm } from "./components/UploadForm"
 
 export default async function Home() {
 
   const res = await db.select().from(files)
 
-  return (<main className={'flex flex-col items-center'}>
+  return (
+    <section className={'mt-4'}>
 
-    <h1 className={'text-center my-10 text-3xl font-medium'}>File Search App</h1>
+      <Tabs defaultValue="list">
+        <TabsList className={'w-full'}>
+          <TabsTrigger value="list">My Files</TabsTrigger>
+          <TabsTrigger value="upload">Upload New</TabsTrigger>
+        </TabsList>
+        <TabsContent value="list">
 
-    <ModeToggle />
+          {res.map((file, index) => (
+            <p key={file.id}>{index + 1}º file: {file.title}</p>
+          ))}
 
-    <section className={'mt-10'}>
+        </TabsContent>
+        <TabsContent value="upload">
 
-      {res.map((file, index) => (
-        <p key={file.id}>{index + 1}º file: {file.title}</p>
-      ))}
+          <UploadForm />
+
+        </TabsContent>
+      </Tabs>
 
     </section>
-
-  </main>)
+  )
 }

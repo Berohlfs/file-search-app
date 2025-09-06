@@ -1,0 +1,43 @@
+'use server'
+
+// Drizzle
+import { db } from "@/db/db-client"
+import { files } from "@/db/schema/files"
+// S3
+import { s3 } from "@/db/s3-client"
+// Libs
+import z from 'zod'
+import { v4 as uuidv4 } from 'uuid'
+import { PutObjectCommand } from "@aws-sdk/client-s3"
+// Validation
+import { upload_form_validation } from "@/validation/uploadFile"
+// Next
+import { revalidatePath } from "next/cache"
+
+export const uploadFile = async (data: z.infer<typeof upload_form_validation>, file: File) => {
+    try {
+        const token = uuidv4()
+
+        const bytes = new Uint8Array(await file.arrayBuffer())
+
+        await db.transaction(async tx => {
+            await tx.insert(files).values({
+                title: data.title,
+                size: file.size,
+                bucket_ref: token,
+            })
+            await s3.send(new PutObjectCommand({
+                Bucket: 'files',
+                Key: token,
+                Body: bytes,
+                ContentType: file.type,
+                ContentLength: bytes.byteLength
+            }))
+        })
+
+        revalidatePath('/')
+    } catch (error) {
+        console.log(error)
+        return 'Unexpected error while uploading file.'
+    }
+}

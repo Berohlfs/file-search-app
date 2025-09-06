@@ -4,7 +4,10 @@ import { Montserrat } from "next/font/google"
 // CSS
 import "./globals.css"
 // Components
-import { ThemeProvider } from "@/app/components/theme-provider"
+import { ThemeProvider } from "@/app/components/ThemeProvider"
+import { Layout } from "@/app/components/Layout"
+// Shadcn
+import { Toaster } from "@/components/ui/sonner"
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -29,7 +32,11 @@ export default function RootLayout({ children }: Props) {
           enableSystem
           disableTransitionOnChange>
 
-          {children}
+          <Layout>
+            {children}
+          </Layout>
+
+          <Toaster />
 
         </ThemeProvider>
       </body>
