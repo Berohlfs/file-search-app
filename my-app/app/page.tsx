@@ -20,9 +20,17 @@ export default async function Home() {
         </TabsList>
         <TabsContent value="list">
 
-          {res.map((file, index) => (
-            <p key={file.id}>{index + 1}º file: {file.title}</p>
-          ))}
+          <div className={'grid grid-cols-1 md:grid-cols-2 gap-2'}>
+
+            {res.map(file => (
+              <div key={file.id} className={'border p-4'}>
+
+                <p>{file.title}</p>
+
+              </div>
+            ))}
+
+          </div>
 
         </TabsContent>
         <TabsContent value="upload">
