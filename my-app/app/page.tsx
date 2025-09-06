@@ -1,14 +1,26 @@
-// Shadcn
-import { Button } from "@/components/ui/button"
 // Components
 import { ModeToggle } from "./components/mode-toggle"
+// Drizzle
+import { db } from "@/db/db-client"
+import { files } from "@/db/schema/files"
 
-export default function Home() {
-  return (<>
+export default async function Home() {
 
-    <h1>Home</h1>
-    <Button>Click me</Button>
+  const res = await db.select().from(files)
+
+  return (<main className={'flex flex-col items-center'}>
+
+    <h1 className={'text-center my-10 text-3xl font-medium'}>File Search App</h1>
+
     <ModeToggle />
 
-  </>)
+    <section className={'mt-10'}>
+
+      {res.map((file, index) => (
+        <p key={file.id}>{index + 1}º file: {file.title}</p>
+      ))}
+
+    </section>
+
+  </main>)
 }
