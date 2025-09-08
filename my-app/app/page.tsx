@@ -20,12 +20,13 @@ export default async function Home() {
         </TabsList>
         <TabsContent value="list">
 
-          <div className={'grid grid-cols-1 md:grid-cols-2 gap-2'}>
+          <div className={'grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[calc(100vh-200px)] overflow-y-scroll'}>
 
             {res.map(file => (
-              <div key={file.id} className={'border p-4'}>
+              <div key={file.id} className={'border p-4 rounded-md shadow'}>
 
                 <p>{file.title}</p>
+                <p>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
 
               </div>
             ))}

@@ -6,7 +6,6 @@ import { files } from "@/db/schema/files"
 // S3
 import { s3 } from "@/db/s3-client"
 // Libs
-import z from 'zod'
 import { v4 as uuidv4 } from 'uuid'
 import { PutObjectCommand } from "@aws-sdk/client-s3"
 // Validation
@@ -14,8 +13,30 @@ import { upload_form_validation } from "@/validation/uploadFile"
 // Next
 import { revalidatePath } from "next/cache"
 
-export const uploadFile = async (data: z.infer<typeof upload_form_validation>, file: File) => {
+export type UploadFileResponses = 'Invalid data.' | 'Please, select a file.' | 'File uploaded!' | 'Unexpected error while uploading file.' | null
+
+export const uploadFile = async (
+    _prev: UploadFileResponses,
+    fd: FormData
+): Promise<UploadFileResponses> => {
     try {
+
+        const unvalidated_data = {
+            title: String(fd.get('title') ?? '')
+        }
+
+        const file = fd.get('file') as File | null
+
+        const { success, data } = upload_form_validation.safeParse(unvalidated_data)
+
+        if (!success || !file) {
+            return 'Invalid data.'
+        }
+
+        if (file.size === 0) {
+            return 'Please, select a file.'
+        }
+
         const token = uuidv4()
 
         const bytes = new Uint8Array(await file.arrayBuffer())
@@ -36,6 +57,8 @@ export const uploadFile = async (data: z.infer<typeof upload_form_validation>, f
         })
 
         revalidatePath('/')
+
+        return 'File uploaded!'
     } catch (error) {
         console.log(error)
         return 'Unexpected error while uploading file.'

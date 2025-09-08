@@ -12,9 +12,7 @@ export const Layout = ({ children }: Props) => {
             <ModeToggle />
         </header>
         <main className={'mx-auto max-w-[800px]'}>
-
             {children}
-
         </main>
     </>)
 }

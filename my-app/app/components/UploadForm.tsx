@@ -18,7 +18,7 @@ import { Upload } from "lucide-react"
 // Actions
 import { uploadFile } from "./actions/uploadFile"
 // React
-import { useState, useTransition } from "react"
+import { useActionState, useEffect, useRef, useState } from "react"
 
 export const UploadForm = () => {
 
@@ -27,36 +27,35 @@ export const UploadForm = () => {
         defaultValues: upload_form_default_values
     })
 
-    const [file, setFile] = useState<File | null>(null)
+    const formRef = useRef<HTMLFormElement>(null)
 
-    const [pending, startTransition] = useTransition()
+    const [response_state, action, pending] = useActionState(uploadFile, null)
 
-    function onSubmit(data: z.infer<typeof upload_form_validation>) {
-        if (!file) {
-            toast.warning('Please, select a file.')
-        } else {
-            startTransition(() => {
-                uploadFile(data, file).then(res => {
-                    if (res) {
-                        toast.warning(res)
-                    } else {
-                        setFile(null)
-                        form.reset()
-                    }
-                })
-            })
+    const [file_ui_reset_switch, setFileUIResetSwitch] = useState(false)
+
+    useEffect(() => {
+        if (response_state && !pending) {
+            if (response_state === 'File uploaded!') {
+                toast.success(response_state)
+                formRef.current?.reset()
+                form.reset()
+                setFileUIResetSwitch(prev => !prev)
+            } else {
+                toast.warning(response_state)
+            }
         }
-    }
+    }, [response_state, pending])
 
     return (
         <div className={'flex flex-col gap-4'}>
-            <Dropzone
-                file={file}
-                setFile={setFile}
-                onFile={(file) => setFile(file)} />
-
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <form
+                    ref={formRef}
+                    className="space-y-4"
+                    action={action}>
+
+                    <Dropzone file_ui_reset_switch={file_ui_reset_switch} />
+
                     <FormField
                         control={form.control}
                         name={'title'}
@@ -71,15 +70,10 @@ export const UploadForm = () => {
                         )}
                     />
                     <Button
-                        disabled={pending}
-                        type="submit">
-                        {pending ?
-                            <>
-                                Uploading...
-                            </> :
-                            <>
-                                Upload <Upload />
-                            </>}
+                        type="button"
+                        onClick={form.handleSubmit(() => formRef.current?.requestSubmit())}
+                        disabled={pending}>
+                        {pending ? 'Uploading…' : <>Upload <Upload /></>}
                     </Button>
                 </form>
             </Form>
