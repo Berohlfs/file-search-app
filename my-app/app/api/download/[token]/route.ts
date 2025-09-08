@@ -12,9 +12,9 @@ import { eq } from "drizzle-orm"
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
-export async function GET(_req: NextRequest, { params }: { params: { token: string } }) {
+export async function GET(_req: NextRequest, ctx: { params: Promise<{ token: string }> }) {
     try {
-        const token = decodeURIComponent(params.token)
+        const { token } = await ctx.params
 
         const [file] = await db.select().from(files).where(eq(files.token, token))
 
