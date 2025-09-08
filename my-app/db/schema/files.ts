@@ -7,6 +7,7 @@ export const files = pgTable("files", {
     token: uuid().default(sql`gen_random_uuid()`).unique().notNull(),
 
     title: varchar({ length: 255 }).notNull(),
+    extension: varchar({ length: 10 }).notNull(),
     size: integer().notNull(),
     bucket_ref: uuid().notNull(),
 

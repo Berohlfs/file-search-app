@@ -5,6 +5,7 @@ import { files } from "@/db/schema/files"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 // Components
 import { UploadForm } from "./components/UploadForm"
+import { DownloadButton } from "./components/DownloadButton"
 
 export default async function Home() {
 
@@ -26,7 +27,11 @@ export default async function Home() {
               <div key={file.id} className={'border p-4 rounded-md shadow'}>
 
                 <p>{file.title}</p>
+                <p>{file.extension}</p>
                 <p>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <DownloadButton
+                  filename={file.title + '.' + file.extension}
+                  token={file.token} />
 
               </div>
             ))}

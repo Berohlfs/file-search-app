@@ -3,28 +3,23 @@
 // Shadcn
 import { Badge } from '@/components/ui/badge'
 // React
-import { useEffect, useState } from 'react'
+import { Dispatch, SetStateAction, useState } from 'react'
 // Libs
 import { useDropzone, type Accept } from 'react-dropzone'
 
 type Props = {
-    file_ui_reset_switch?: boolean
+    file: File | null,
+    setFile: Dispatch<SetStateAction<File | null>>
 }
 
-export function Dropzone({ file_ui_reset_switch }: Props) {
+export function Dropzone({ file, setFile }: Props) {
 
     const ACCEPT: Accept = {
         'application/pdf': ['.pdf'],
         'text/plain': ['.txt'],
     }
 
-    const [file, setFile] = useState<File | null>(null)
-
     const [error, setError] = useState<string | null>(null)
-
-    useEffect(() => {
-        setFile(null)
-    }, [file_ui_reset_switch])
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const onDrop = (files: File[], rejections: any[]) => {
@@ -59,7 +54,7 @@ export function Dropzone({ file_ui_reset_switch }: Props) {
                 ].join(' ')}
                 aria-label="Upload a document (PDF or TXT — max 4.5 MB)"
             >
-                <input {...getInputProps()} name={'file'} required />
+                <input {...getInputProps()}/>
 
                 <div className="text-muted-foreground">
                     <div className="font-bold text-sm">Drag & drop your file</div>

@@ -29,31 +29,30 @@ export const UploadForm = () => {
 
     const formRef = useRef<HTMLFormElement>(null)
 
-    const [file_ui_reset_switch, setFileUIResetSwitch] = useState(false)
+    const [file, setFile] = useState<File | null>(null)
 
     const [pending, startTransition] = useTransition()
 
     async function onSubmit() {
 
         const formEl = formRef.current
-
-        if(!formEl){
-            return 
+        
+        if (!formEl) {
+            return
         }
-
         const fd = new FormData(formEl)
 
-        const input = formEl.querySelector<HTMLInputElement>('input[name="file"]')
-        const file = input?.files?.[0]
-
-        // Avoids ERR_UPLOAD_FILE_CHANGED (ex: Google Drive files on Android)
         if (file) {
             const ab = await file.arrayBuffer()
+
+            // Avoids ERR_UPLOAD_FILE_CHANGED (ex: Google Drive files on Android)
             const stable = new File([ab], file.name, {
                 type: file.type || 'application/octet-stream',
                 lastModified: Date.now(),
             })
             fd.set('file', stable, stable.name)
+        } else {
+            return toast.warning('Please, select a file.')
         }
 
         startTransition(() => {
@@ -61,7 +60,7 @@ export const UploadForm = () => {
                 if (res) {
                     toast.warning(res)
                 } else {
-                    setFileUIResetSwitch(prev => !prev)
+                    setFile(null)
                     form.reset()
                 }
             })
@@ -70,14 +69,16 @@ export const UploadForm = () => {
 
     return (
         <div className={'flex flex-col gap-4'}>
+
+            <Dropzone
+                file={file}
+                setFile={setFile} />
+
             <Form {...form}>
                 <form
                     ref={formRef}
                     className="space-y-4"
-                    onSubmit={form.handleSubmit(()=> onSubmit())} >
-
-                    <Dropzone
-                        file_ui_reset_switch={file_ui_reset_switch} />
+                    onSubmit={form.handleSubmit(() => onSubmit())} >
 
                     <FormField
                         control={form.control}

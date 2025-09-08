@@ -15,7 +15,6 @@ import { revalidatePath } from "next/cache"
 
 export const uploadFile = async (fd: FormData) => {
     try {
-
         const unvalidated_data = {
             title: String(fd.get('title') ?? ''),
         }
@@ -36,8 +35,15 @@ export const uploadFile = async (fd: FormData) => {
 
         const bytes = new Uint8Array(await file.arrayBuffer())
 
+        const name = file.name
+
+        const extension = name.includes(".")
+            ? name.split(".").pop()!.toLowerCase()
+            : ""
+
         await db.transaction(async tx => {
             await tx.insert(files).values({
+                extension: extension,
                 title: data.title,
                 size: file.size,
                 bucket_ref: token,
