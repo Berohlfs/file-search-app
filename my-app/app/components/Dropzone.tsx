@@ -4,6 +4,7 @@
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from 'react'
 // Libs
 import { useDropzone, type Accept } from 'react-dropzone'
+import { toast } from 'sonner'
 
 type Props = {
     onFile: (file: File) => void
@@ -18,7 +19,7 @@ export function Dropzone({ onFile, file, setFile }: Props) {
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
         'text/plain': ['.txt'],
     }
-    const MAX_SIZE_BYTES = useMemo(() => Math.floor(4.5 * 1024 * 1024), [])
+    const MAX_SIZE_BYTES = useMemo(() => Math.floor(4 * 1024 * 1024), [])
 
     const [error, setError] = useState<string | null>(null)
 
@@ -35,7 +36,13 @@ export function Dropzone({ onFile, file, setFile }: Props) {
         }
 
         const f = accepted[0]
-        if (!f) return
+        if (!f) return toast.warning('No file selected.')
+
+        if (f.size === 0 || (f.type || '').startsWith('application/vnd.google-apps')) {
+            setFile(null)
+            setError('Google Drive placeholders cannot be uploaded. Please export as PDF/DOCX/TXT first.')
+            return
+        }
 
         setFile(f)
         onFile(f)
@@ -66,7 +73,7 @@ export function Dropzone({ onFile, file, setFile }: Props) {
                     <div className="text-sm text-muted-foreground">
                         <div className="font-medium">Drag & drop your file</div>
                         <div className="opacity-70">or click to browse</div>
-                        <div className="mt-1 text-xs opacity-60">Accepted: PDF, DOCX, TXT — up to 4.5 MB</div>
+                        <div className="mt-1 text-xs opacity-60">Accepted: PDF, DOCX, TXT — up to 4 MB</div>
                     </div>
                 ) : (
                     <div className="text-sm text-muted-foreground">
