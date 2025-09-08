@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge'
 import { useEffect, useState } from 'react'
 // Libs
 import { useDropzone, type Accept } from 'react-dropzone'
-import { toast } from 'sonner'
 
 type Props = {
     file_ui_reset_switch?: boolean
@@ -28,19 +27,16 @@ export function Dropzone({ file_ui_reset_switch }: Props) {
     }, [file_ui_reset_switch])
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const onDrop = (accepted: File[], rejections: any[]) => {
+    const onDrop = (files: File[], rejections: any[]) => {
         setError(null)
 
         if (rejections?.length) {
             const reasons = rejections[0]?.errors?.map((e: { message: string }) => e.message).join(', ')
-            setFile(null)
             setError(reasons || 'Invalid file')
             return
         }
 
-        const f = accepted[0]
-        if (!f || f.size === 0) return toast.warning('File not selected.')
-
+        const f = files[0]
         setFile(f)
     }
 

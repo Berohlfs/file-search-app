@@ -18,7 +18,7 @@ import { Upload } from "lucide-react"
 // Actions
 import { uploadFile } from "./actions/uploadFile"
 // React
-import { useActionState, useEffect, useRef, useState } from "react"
+import { useRef, useState, useTransition } from "react"
 
 export const UploadForm = () => {
 
@@ -29,22 +29,44 @@ export const UploadForm = () => {
 
     const formRef = useRef<HTMLFormElement>(null)
 
-    const [response_state, action, pending] = useActionState(uploadFile, null)
-
     const [file_ui_reset_switch, setFileUIResetSwitch] = useState(false)
 
-    useEffect(() => {
-        if (response_state && !pending) {
-            if (response_state === 'File uploaded!') {
-                toast.success(response_state)
-                formRef.current?.reset()
-                form.reset()
-                setFileUIResetSwitch(prev => !prev)
-            } else {
-                toast.warning(response_state)
-            }
+    const [pending, startTransition] = useTransition()
+
+    async function onSubmit() {
+
+        const formEl = formRef.current
+
+        if(!formEl){
+            return 
         }
-    }, [response_state, pending])
+
+        const fd = new FormData(formEl)
+
+        const input = formEl.querySelector<HTMLInputElement>('input[name="file"]')
+        const file = input?.files?.[0]
+
+        // Avoids ERR_UPLOAD_FILE_CHANGED (ex: Google Drive files on Android)
+        if (file) {
+            const ab = await file.arrayBuffer()
+            const stable = new File([ab], file.name, {
+                type: file.type || 'application/octet-stream',
+                lastModified: Date.now(),
+            })
+            fd.set('file', stable, stable.name)
+        }
+
+        startTransition(() => {
+            uploadFile(fd).then(res => {
+                if (res) {
+                    toast.warning(res)
+                } else {
+                    setFileUIResetSwitch(prev => !prev)
+                    form.reset()
+                }
+            })
+        })
+    }
 
     return (
         <div className={'flex flex-col gap-4'}>
@@ -52,9 +74,10 @@ export const UploadForm = () => {
                 <form
                     ref={formRef}
                     className="space-y-4"
-                    action={action}>
+                    onSubmit={form.handleSubmit(()=> onSubmit())} >
 
-                    <Dropzone file_ui_reset_switch={file_ui_reset_switch} />
+                    <Dropzone
+                        file_ui_reset_switch={file_ui_reset_switch} />
 
                     <FormField
                         control={form.control}
@@ -70,10 +93,15 @@ export const UploadForm = () => {
                         )}
                     />
                     <Button
-                        type="button"
-                        onClick={form.handleSubmit(() => formRef.current?.requestSubmit())}
-                        disabled={pending}>
-                        {pending ? 'Uploading…' : <>Upload <Upload /></>}
+                        disabled={pending}
+                        type="submit">
+                        {pending ?
+                            <>
+                                Uploading...
+                            </> :
+                            <>
+                                Upload <Upload />
+                            </>}
                     </Button>
                 </form>
             </Form>

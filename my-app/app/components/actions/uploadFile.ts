@@ -13,16 +13,11 @@ import { upload_form_validation } from "@/validation/uploadFile"
 // Next
 import { revalidatePath } from "next/cache"
 
-export type UploadFileResponses = 'Invalid data.' | 'Please, select a file.' | 'File uploaded!' | 'Unexpected error while uploading file.' | null
-
-export const uploadFile = async (
-    _prev: UploadFileResponses,
-    fd: FormData
-): Promise<UploadFileResponses> => {
+export const uploadFile = async (fd: FormData) => {
     try {
 
         const unvalidated_data = {
-            title: String(fd.get('title') ?? '')
+            title: String(fd.get('title') ?? ''),
         }
 
         const file = fd.get('file') as File | null
@@ -57,8 +52,6 @@ export const uploadFile = async (
         })
 
         revalidatePath('/')
-
-        return 'File uploaded!'
     } catch (error) {
         console.log(error)
         return 'Unexpected error while uploading file.'
