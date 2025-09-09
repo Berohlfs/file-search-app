@@ -5,7 +5,6 @@ import { Montserrat } from "next/font/google"
 import "./globals.css"
 // Components
 import { ThemeProvider } from "@/app/components/ThemeProvider"
-import { Layout } from "@/app/components/Layout"
 // Shadcn
 import { Toaster } from "@/components/ui/sonner"
 
@@ -32,9 +31,7 @@ export default function RootLayout({ children }: Props) {
           enableSystem
           disableTransitionOnChange>
 
-          <Layout>
-            {children}
-          </Layout>
+          {children}
 
           <Toaster />
 

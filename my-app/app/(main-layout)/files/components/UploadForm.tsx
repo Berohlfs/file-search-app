@@ -36,7 +36,7 @@ export const UploadForm = () => {
     async function onSubmit() {
 
         const formEl = formRef.current
-        
+
         if (!formEl) {
             return
         }
@@ -60,6 +60,7 @@ export const UploadForm = () => {
                 if (res) {
                     toast.warning(res)
                 } else {
+                    toast.success('Upload successful!')
                     setFile(null)
                     form.reset()
                 }
@@ -80,30 +81,34 @@ export const UploadForm = () => {
                     className="space-y-4"
                     onSubmit={form.handleSubmit(() => onSubmit())} >
 
-                    <FormField
-                        control={form.control}
-                        name={'title'}
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>File Title</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Type the title here" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <Button
-                        disabled={pending}
-                        type="submit">
-                        {pending ?
-                            <>
-                                Uploading...
-                            </> :
-                            <>
-                                Upload <Upload />
-                            </>}
-                    </Button>
+                    <div className={'flex gap-2'}>
+                        <FormField
+                            control={form.control}
+                            name={'title'}
+                            render={({ field }) => (
+                                <FormItem className={'flex-1 '}>
+                                    <FormLabel>File Title</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="Type the title here" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <Button
+                            className={'mt-[22px]'}
+                            disabled={pending}
+                            type="submit">
+                            {pending ?
+                                <>
+                                    Uploading...
+                                </> :
+                                <>
+                                    Upload <Upload />
+                                </>}
+                        </Button>
+                    </div>
                 </form>
             </Form>
         </div>
