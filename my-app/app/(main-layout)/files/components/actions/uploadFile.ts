@@ -8,6 +8,7 @@ import { s3 } from "@/db/s3-client"
 // Libs
 import { v4 as uuidv4 } from 'uuid'
 import { PutObjectCommand } from "@aws-sdk/client-s3"
+import { extractText, getDocumentProxy } from "unpdf"
 // Validation
 import { upload_form_validation } from "@/validation/uploadFile"
 // Next
@@ -24,16 +25,12 @@ export const uploadFile = async (fd: FormData) => {
         const { success, data } = upload_form_validation.safeParse(unvalidated_data)
 
         if (!success || !file) {
-            return 'Invalid data.'
+            return 'Invalid/missing data.'
         }
 
         if (file.size === 0) {
             return 'Please, select a file.'
         }
-
-        const token = uuidv4()
-
-        const bytes = new Uint8Array(await file.arrayBuffer())
 
         const name = file.name
 
@@ -41,8 +38,33 @@ export const uploadFile = async (fd: FormData) => {
             ? name.split(".").pop()!.toLowerCase()
             : ""
 
+        if (!(
+            (extension === 'pdf' && file.type === 'application/pdf') ||
+            (extension === 'txt' && file.type === 'text/plain')
+        )) {
+            return 'Only PDF or TXT are allowed.'
+        }
+
+        const ab = await file.arrayBuffer()
+        const abCloned = ab.slice(0)
+        const bytes = new Uint8Array(abCloned)
+        const buf = Buffer.from(bytes) 
+
+        let content_text = ''
+        if (file.type === 'application/pdf') {
+            const { text } = await extractText(bytes, { mergePages: true })
+            content_text = text ?? ''
+        } else {
+            content_text = new TextDecoder('utf-8', { fatal: false }).decode(bytes)
+        }
+
+        const token = uuidv4()
+
         await db.transaction(async tx => {
             await tx.insert(files).values({
+                content_text: content_text,
+                char_count: content_text.length,
+                mime_type: file.type,
                 extension: extension,
                 title: data.title,
                 size: file.size,
@@ -51,9 +73,9 @@ export const uploadFile = async (fd: FormData) => {
             await s3.send(new PutObjectCommand({
                 Bucket: 'files',
                 Key: token,
-                Body: bytes,
+                Body: buf,
                 ContentType: file.type,
-                ContentLength: bytes.byteLength
+                ContentLength: buf.byteLength
             }))
         })
 
