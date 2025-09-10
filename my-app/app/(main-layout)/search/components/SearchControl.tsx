@@ -12,6 +12,8 @@ import { useCallback, useEffect, useState, useTransition } from "react"
 import { debounce } from "@/utils/debounce"
 // Components
 import { CircularProgress } from "@/app/components/CircularProgress"
+// Icons
+import { Info } from "lucide-react"
 
 type Props = {
     children: React.ReactNode
@@ -29,15 +31,20 @@ export const SearchControl = ({ children }: Props) => {
     const [pending, startTransition] = useTransition()
 
     const debouncedSearch = useCallback(debounce((search: string) => {
-        startTransition(() => {
-            const current_params = new URLSearchParams(searchParams.toString())
-            if (search) {
-                current_params.set('q', search)
-            } else {
-                current_params.delete('q')
-            }
-            router.push(`?${current_params.toString()}`)
-        })
+        const current_params = new URLSearchParams(searchParams.toString())
+        const filter = () => router.push(`?${current_params.toString()}`)
+
+        if ((search && search.length > 3) || !search) {
+            startTransition(() => {
+                if (search && search.length > 3) {
+                    current_params.set('q', search)
+                } else if (!search) {
+                    current_params.delete('q')
+                }
+                filter()
+            })
+        }
+
     }, 1000), [searchParams])
 
     const toggleSemanticSwitch = (semantic: boolean) => {
@@ -82,7 +89,7 @@ export const SearchControl = ({ children }: Props) => {
                 id={'q'}
                 value={search_value}
                 onChange={(e) => { setSearchValue(e.target.value); debouncedSearch(e.target.value) }}
-                placeholder={'Search by file title, keywords, sentences, etc. At least 3 characters.'}
+                placeholder={'Search by file title, keywords, sentences, etc. At least 4 characters.'}
                 className={'h-14'} />
         </div>
 
@@ -94,5 +101,17 @@ export const SearchControl = ({ children }: Props) => {
             </div>
             :
             children}
+
+        <div className="flex flex-col items-center gap-3 mt-6">
+            <Info size={16} aria-label="How search works" />
+            <p className="text-muted-foreground text-xs text-center">
+                <strong>Semantic search</strong> turns your query into a vector and compares it to
+                vectors of small text chunks from every file using <code>pgvector</code>.
+                Embeddings are generated with OpenAI’s <em>text-embedding-3-small</em> model.
+            </p>
+            <p className="text-muted-foreground text-xs text-center">
+                <strong>Traditional search</strong> matches your query against file titles and content using <code>ILIKE</code>.
+            </p>
+        </div>
     </>)
 }

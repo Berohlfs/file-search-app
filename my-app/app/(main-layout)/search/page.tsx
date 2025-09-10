@@ -121,9 +121,10 @@ export default async function Search({ searchParams }: Props) {
                 {preview}…
             </p>
             {distance &&
-                <div className="mt-2 text-xs text-muted-foreground font-medium italic mb-1">
+                <div className="mt-2 text-xs text-muted-foreground font-medium italic">
                     Distance: {distance.toFixed(4)}
                 </div>}
+            <div className={'mt-2'}/>
             <DownloadButton
                 variant={'full'}
                 filename={title + '.' + extension}
@@ -141,7 +142,7 @@ export default async function Search({ searchParams }: Props) {
     )
 
     const GridWrapper = ({ children }: { children: React.ReactNode }) => (
-        <div className={'grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[calc(100vh-220px)] overflow-y-scroll mt-3'}>
+        <div className={'grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[calc(100vh-380px)] overflow-y-scroll mt-2 px-1'}>
             {children}
         </div>
     )
@@ -154,7 +155,7 @@ export default async function Search({ searchParams }: Props) {
                     <Tabs defaultValue={'semantic'}>
                         <TabsList className={'w-full'}>
                             <TabsTrigger value="semantic">Semantic Search</TabsTrigger>
-                            <TabsTrigger value="traditional">Tradicional Search</TabsTrigger>
+                            <TabsTrigger value="traditional">Traditional Search</TabsTrigger>
                         </TabsList>
                         <TabsContent value="semantic">
 

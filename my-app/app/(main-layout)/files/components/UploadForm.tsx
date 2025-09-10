@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 // Icons
-import { Upload } from "lucide-react"
+import { AlertCircle, Upload } from "lucide-react"
 // Actions
 import { uploadFile } from "./actions/uploadFile"
 // React
@@ -68,7 +68,7 @@ export const UploadForm = () => {
         })
     }
 
-    return (
+    return (<>
         <div className={'flex flex-col gap-4'}>
 
             <Dropzone
@@ -112,5 +112,12 @@ export const UploadForm = () => {
                 </form>
             </Form>
         </div>
-    )
+        <div className={'flex flex-col gap-2 items-center mt-12'}>
+            <p className={'text-muted-foreground text-xs text-center'}>
+                This tool extracts text <span className={'font-bold'}>directly from the PDF</span>. <br />
+                If your file is a scanned document or image-only PDF, the text <span className={'font-bold'}>may not appear</span>.
+            </p>
+            <AlertCircle size={16} />
+        </div>
+    </>)
 }

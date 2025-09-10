@@ -16,7 +16,7 @@ import Image from "next/image"
 // Libs
 import dayjs from 'dayjs'
 // Icons
-import { AlertCircle, Ban, CircleDashed, FileCheck } from "lucide-react"
+import { Ban, CircleDashed, FileCheck } from "lucide-react"
 
 type Props = {
   searchParams: Promise<{
@@ -72,7 +72,7 @@ export default async function Files({ searchParams }: Props) {
         <TabsContent value="list">
           {(files_data && files_data.length > 0) ?
 
-            <div className={'grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[calc(100vh-180px)] overflow-y-scroll'}>
+            <div className={'grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[calc(100vh-220px)] overflow-y-scroll px-2'}>
 
               {files_data.map(file => (
                 <article key={file.id} className={'border shadow p-4 rounded-md flex items-start gap-4'}>
@@ -136,14 +136,6 @@ export default async function Files({ searchParams }: Props) {
         <TabsContent value="upload">
 
           <UploadForm />
-
-          <div className={'flex flex-col gap-2 items-center mt-12'}>
-            <p className={'text-muted-foreground text-xs text-center'}>
-              This tool extracts text <span className={'font-bold'}>directly from the PDF</span>. <br />
-              If your file is a scanned document or image-only PDF, the text <span className={'font-bold'}>may not appear</span>.
-            </p>
-            <AlertCircle size={16} />
-          </div>
 
         </TabsContent>
       </Tabs>
