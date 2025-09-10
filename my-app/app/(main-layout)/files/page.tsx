@@ -83,7 +83,7 @@ export default async function Files({ searchParams }: Props) {
                     src={`/file-icons/${file.extension}-logo.png`}
                     alt={'File Extension Icon'} />
 
-                  <div className={'flex-1 flex flex-col gap-2'}>
+                  <div className={'flex-1 flex flex-col gap-3'}>
                     <div>
                       <h2 className={'text-sm font-medium'}>{file.title}</h2>
                       <p className={'text-muted-foreground text-xs mt-1'}>
@@ -97,7 +97,7 @@ export default async function Files({ searchParams }: Props) {
                       </p>
                     </div>
 
-                    <div className={'flex gap-1 justify-between items-center'}>
+                    <div className={'flex gap-1 justify-between items-center flex-wrap'}>
                       <Badge className={`${statusMap(file.status).bg} ${statusMap(file.status).text} ${statusMap(file.status).border}`}>
                         {file.status}{statusMap(file.status)?.Icon}
                       </Badge>
