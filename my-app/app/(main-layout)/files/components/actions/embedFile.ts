@@ -9,6 +9,8 @@ import { file_chunks } from "@/db/schema/file_chunks"
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters"
 // Next
 import { revalidatePath } from "next/cache"
+// OpenAI
+import { openai } from "@/db/openai-client"
 
 export const embedFile = async (token: string) => {
     try {
@@ -33,17 +35,27 @@ export const embedFile = async (token: string) => {
 
         const texts = chunks.map(c => c.pageContent) as string[]
 
+        const resp = await openai.embeddings.create({
+            model: "text-embedding-3-small",
+            input: texts,
+        })
+
+        const rows = resp.data.map(d => ({
+            content_text: texts[d.index],
+            embedding: d.embedding,
+            char_count: texts[d.index].length,
+            file_id: file.id,
+        }))
+
         await db.transaction(async tx => {
-            await tx.insert(file_chunks).values(texts.map(text => (
-                { content_text: text, embedding: [1], char_count: text.length, file_id: file.id }
-            )))
+            await tx.insert(file_chunks).values(rows)
 
             await tx.update(files).set({ status: 'Processed' }).where(eq(files.token, token))
         })
-
-        revalidatePath('')
     } catch (error) {
         console.log(error)
         return 'Unexpected error while embedding file.'
+    } finally {
+        revalidatePath('')
     }
 }
