@@ -5,7 +5,7 @@ import { DownloadButton } from "../files/components/DownloadButton"
 import { openai } from "@/db/openai-client"
 // Drizzle
 import { db } from "@/db/db-client"
-import { and, desc, eq, ilike, or, sql } from "drizzle-orm"
+import { and, desc, eq, ilike, sql } from "drizzle-orm"
 import { files } from "@/db/schema/files"
 import { file_chunks } from "@/db/schema/file_chunks"
 // Libs
@@ -13,8 +13,11 @@ import pgvector from 'pgvector'
 // Shadcn
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 // Icons
-import { Sparkles } from "lucide-react"
+import { Eye, Sparkles } from "lucide-react"
+// Next
+import Link from "next/link"
 
 type Props = {
     searchParams: Promise<{
@@ -39,19 +42,26 @@ export default async function Search({ searchParams }: Props) {
         embedded_search_value = pgvector.toSql(resp.data[0].embedding)
     }
 
-    let semantic_search_data: {
+    interface Result {
         id: number
+        bucket_ref: string
         token: string
         title: string
         preview: string
         extension: string
+    }
+
+    interface SemanticResult extends Result {
         distance: number
-    }[] | null = null
+    }
+
+    let semantic_search_data: SemanticResult[] | null = null
 
     if (embedded_search_value) {
         semantic_search_data = await db
             .select({
                 id: file_chunks.id,
+                bucket_ref: files.bucket_ref,
                 token: files.token,
                 title: files.title,
                 extension: files.extension,
@@ -65,18 +75,13 @@ export default async function Search({ searchParams }: Props) {
             .limit(6)
     }
 
-    let traditional_search_data: {
-        id: number
-        token: string
-        title: string
-        preview: string
-        extension: string
-    }[] | null = null
+    let traditional_search_data: Result[] | null = null
 
     if (valid_search) {
         traditional_search_data = await db
             .select({
                 id: file_chunks.id,
+                bucket_ref: files.bucket_ref,
                 token: files.token,
                 file_id: file_chunks.file_id,
                 title: files.title,
@@ -100,9 +105,10 @@ export default async function Search({ searchParams }: Props) {
         highlight?: boolean
         token: string
         extension: string
+        bucket_ref: string
     }
 
-    const ResultCard = ({ title, preview, distance, highlight, token, extension }: PropsResultCard) => (
+    const ResultCard = ({ title, preview, distance, highlight, token, extension, bucket_ref }: PropsResultCard) => (
         <article className={`flex flex-col gap-2 justify-between rounded-lg border p-3 shadow-sm ${highlight ? 'border-chart-2/20 border-3' : ''}`}>
             <div>
                 <div className={'flex items-center gap-2 justify-between'}>
@@ -123,11 +129,23 @@ export default async function Search({ searchParams }: Props) {
                         Semantic Distance: {distance.toFixed(4)}
                     </div>}
             </div>
-
-            <DownloadButton
-                variant={'full'}
-                filename={title + '.' + extension}
-                token={token} />
+            <div className={'flex items-center justify-end'}>
+                <Button
+                    size={'sm'}
+                    variant={'link'}
+                    asChild>
+                    <Link
+                        prefetch={false}
+                        href={`${process.env.SUPABASE_PUBLIC_FILES_URL}/${bucket_ref}`}
+                        target={'_blank'}>
+                        Preview <Eye />
+                    </Link>
+                </Button>
+                <DownloadButton
+                    variant={'complete'}
+                    filename={title + '.' + extension}
+                    token={token} />
+            </div>
         </article>
     )
 
@@ -162,6 +180,7 @@ export default async function Search({ searchParams }: Props) {
                                 <GridWrapper>
                                     {semantic_search_data.map((row, index) => (
                                         <ResultCard
+                                            bucket_ref={row.bucket_ref}
                                             token={row.token}
                                             extension={row.extension}
                                             highlight={index === 0 ? true : false}
@@ -181,6 +200,7 @@ export default async function Search({ searchParams }: Props) {
                                 <GridWrapper>
                                     {traditional_search_data.map((row) => (
                                         <ResultCard
+                                            bucket_ref={row.bucket_ref}
                                             token={row.token}
                                             extension={row.extension}
                                             title={row.title}
@@ -198,6 +218,7 @@ export default async function Search({ searchParams }: Props) {
                         <GridWrapper>
                             {traditional_search_data.map((row) => (
                                 <ResultCard
+                                    bucket_ref={row.bucket_ref}
                                     token={row.token}
                                     extension={row.extension}
                                     title={row.title}
