@@ -83,9 +83,9 @@ export default async function Files({ searchParams }: Props) {
                     src={`/file-icons/${file.extension}-logo.png`}
                     alt={'File Extension Icon'} />
 
-                  <div className={'flex-1 flex flex-col gap-3'}>
-                    <div>
-                      <h2 className={'text-sm font-medium'}>{file.title}</h2>
+                  <div className={'flex-1 flex flex-col gap-3 min-w-0'}>
+                    <div className="min-w-0">
+                      <h2 className={'text-sm font-medium truncate'}>{file.title}</h2>
                       <p className={'text-muted-foreground text-xs mt-1'}>
                         Size: {(file.size / 1024 / 1024).toFixed(2)} MB
                       </p>

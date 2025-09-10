@@ -65,7 +65,7 @@ export function Dropzone({ file, setFile }: Props) {
                 {file &&
                     <div className="flex gap-1 items-center">
                         <Badge>
-                            {file.name}
+                            {file.name.length > 20 ? `${file.name.slice(0,20)}...` : file.name}
                         </Badge>
                         <Badge variant={'outline'}>
                             {sizeMB} MB

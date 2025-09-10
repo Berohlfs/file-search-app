@@ -117,8 +117,10 @@ export default async function Search({ searchParams }: Props) {
         <article className={`flex flex-col gap-2 justify-between rounded-lg border p-3 shadow-sm ${highlight ? 'border-chart-2/20 border-3' : ''}`}>
             <div>
                 <div className={'flex items-center gap-2 justify-between'}>
-                    <p className="text-sm font-medium flex items-center gap-1">
-                        {title}.{extension} ➡ <span className={'text-xs font-bold'}>chunk nº {chunk_position}</span>
+                    <p className={`text-sm font-medium flex items-center gap-1 ${highlight ? 'max-w-[calc(100%-115px)]' : 'max-w-[100%]'}`}>
+                        <span className="truncate min-w-0">{title}.{extension}</span>
+                        ➡
+                        <span className="text-xs font-bold whitespace-nowrap">chunk nº {chunk_position}</span>
                     </p>
                     {highlight &&
                         <Badge className={'bg-chart-2/20 text-chart-2 border-chart-2/20'}>
