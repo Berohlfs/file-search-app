@@ -35,7 +35,7 @@ export const embedFile = async (token: string) => {
 
         await db.transaction(async tx => {
             await tx.insert(file_chunks).values(texts.map(text => (
-                { content_text: text, char_count: text.length, file_id: file.id }
+                { content_text: text, embedding: [1], char_count: text.length, file_id: file.id }
             )))
 
             await tx.update(files).set({ status: 'Processed' }).where(eq(files.token, token))
