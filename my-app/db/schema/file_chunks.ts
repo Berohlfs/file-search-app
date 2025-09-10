@@ -10,6 +10,7 @@ export const file_chunks = pgTable("file_chunks", {
     content_text: text().notNull(),
     char_count: integer().notNull(),
     embedding: vector("embedding", { dimensions: 1536 }).notNull(),
+    position: integer().notNull(),
 
     created_at: timestamp({ withTimezone: true }).defaultNow().notNull(),
 

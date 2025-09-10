@@ -45,6 +45,7 @@ export default async function Search({ searchParams }: Props) {
     interface Result {
         id: number
         bucket_ref: string
+        chunk_position: number
         token: string
         title: string
         preview: string
@@ -61,6 +62,7 @@ export default async function Search({ searchParams }: Props) {
         semantic_search_data = await db
             .select({
                 id: file_chunks.id,
+                chunk_position: file_chunks.position,
                 bucket_ref: files.bucket_ref,
                 token: files.token,
                 title: files.title,
@@ -81,6 +83,7 @@ export default async function Search({ searchParams }: Props) {
         traditional_search_data = await db
             .select({
                 id: file_chunks.id,
+                chunk_position: file_chunks.position,
                 bucket_ref: files.bucket_ref,
                 token: files.token,
                 file_id: file_chunks.file_id,
@@ -101,19 +104,21 @@ export default async function Search({ searchParams }: Props) {
     type PropsResultCard = {
         title: string,
         preview: string,
-        distance?: number,
-        highlight?: boolean
+        chunk_position: number
         token: string
         extension: string
         bucket_ref: string
+
+        distance?: number
+        highlight?: boolean
     }
 
-    const ResultCard = ({ title, preview, distance, highlight, token, extension, bucket_ref }: PropsResultCard) => (
+    const ResultCard = ({ title, preview, distance, highlight, token, extension, bucket_ref, chunk_position }: PropsResultCard) => (
         <article className={`flex flex-col gap-2 justify-between rounded-lg border p-3 shadow-sm ${highlight ? 'border-chart-2/20 border-3' : ''}`}>
             <div>
                 <div className={'flex items-center gap-2 justify-between'}>
-                    <p className="text-sm font-medium">
-                        {title}
+                    <p className="text-sm font-medium flex items-center gap-1">
+                        {title}.{extension} ➡ <span className={'text-xs font-bold'}>chunk nº {chunk_position}</span>
                     </p>
                     {highlight &&
                         <Badge className={'bg-chart-2/20 text-chart-2 border-chart-2/20'}>
@@ -183,6 +188,7 @@ export default async function Search({ searchParams }: Props) {
                                             bucket_ref={row.bucket_ref}
                                             token={row.token}
                                             extension={row.extension}
+                                            chunk_position={row.chunk_position}
                                             highlight={index === 0 ? true : false}
                                             title={row.title}
                                             distance={row.distance}
@@ -203,6 +209,7 @@ export default async function Search({ searchParams }: Props) {
                                             bucket_ref={row.bucket_ref}
                                             token={row.token}
                                             extension={row.extension}
+                                            chunk_position={row.chunk_position}
                                             title={row.title}
                                             preview={row.preview}
                                             key={row.id} />
@@ -221,6 +228,7 @@ export default async function Search({ searchParams }: Props) {
                                     bucket_ref={row.bucket_ref}
                                     token={row.token}
                                     extension={row.extension}
+                                    chunk_position={row.chunk_position}
                                     title={row.title}
                                     preview={row.preview}
                                     key={row.id} />

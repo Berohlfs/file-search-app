@@ -74,7 +74,7 @@ export const SearchControl = ({ children }: Props) => {
     return (<>
         <div className={'flex flex-col gap-2 mb-3'}>
             <div className={'ml-2 flex items-center justify-between gap-2'}>
-                <Label htmlFor="q">Search</Label>
+                <Label htmlFor="q">Search Contents</Label>
 
                 <div className="flex items-center space-x-2">
                     <Label htmlFor="semantic" className={'text-xs font-normal'}>Semantic Search</Label>

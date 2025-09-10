@@ -6,7 +6,7 @@ import { files } from "@/db/schema/files"
 import { eq } from "drizzle-orm"
 import { file_chunks } from "@/db/schema/file_chunks"
 // Libs
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters"
+import { TokenTextSplitter } from "@langchain/textsplitters"
 // Next
 import { revalidatePath } from "next/cache"
 // OpenAI
@@ -26,9 +26,10 @@ export const embedFile = async (token: string) => {
         // Temp status. If embedding is successful, status = Processed
         await db.update(files).set({ status: 'Failed' }).where(eq(files.token, token))
 
-        const splitter = new RecursiveCharacterTextSplitter({
+        const splitter = new TokenTextSplitter({
             chunkSize: 300,
             chunkOverlap: 50,
+            encodingName: 'cl100k_base'
         })
 
         const chunks = await splitter.createDocuments([file.content_text])
@@ -45,6 +46,7 @@ export const embedFile = async (token: string) => {
             embedding: d.embedding,
             char_count: texts[d.index].length,
             file_id: file.id,
+            position: d.index + 1
         }))
 
         await db.transaction(async tx => {
@@ -56,6 +58,6 @@ export const embedFile = async (token: string) => {
         console.log(error)
         return 'Unexpected error while embedding file.'
     } finally {
-        revalidatePath('')
+        revalidatePath('/search')
     }
 }

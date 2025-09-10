@@ -72,7 +72,7 @@ export default async function Files({ searchParams }: Props) {
         <TabsContent value="list">
           {(files_data && files_data.length > 0) ?
 
-            <div className={'grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[calc(100vh-220px)] overflow-y-scroll px-2'}>
+            <div className={'grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[calc(100vh-240px)] overflow-y-scroll px-2'}>
 
               {files_data.map(file => (
                 <article key={file.id} className={'border shadow p-4 rounded-md flex items-start gap-4'}>
@@ -97,10 +97,12 @@ export default async function Files({ searchParams }: Props) {
                       </p>
                     </div>
 
-                    <div className={'flex gap-1 justify-between items-center flex-wrap'}>
-                      <Badge className={`${statusMap(file.status).bg} ${statusMap(file.status).text} ${statusMap(file.status).border}`}>
+                    <div className={'flex gap-2 justify-between items-center flex-wrap'}>
+                      <Badge 
+                        className={`${statusMap(file.status).bg} ${statusMap(file.status).text} ${statusMap(file.status).border}`}>
                         {file.status}{statusMap(file.status)?.Icon}
                       </Badge>
+                      
                       <div className={'flex items-center'}>
                         {file.status === 'Pending' &&
                           <EmbedButton
