@@ -1,15 +1,18 @@
 // Drizzle
 import { sql } from "drizzle-orm"
-import { pgTable, varchar, timestamp, serial, uuid, integer, text } from "drizzle-orm/pg-core"
+import { pgTable, varchar, timestamp, serial, uuid, integer, text, pgEnum } from "drizzle-orm/pg-core"
+
+export const file_status = pgEnum('file_status', ['Pending', 'Processed', 'Failed'])
 
 export const files = pgTable("files", {
     id: serial().primaryKey().notNull(),
     token: uuid().default(sql`gen_random_uuid()`).unique().notNull(),
 
+    status: file_status().notNull().default('Pending'),
+
     title: varchar({ length: 255 }).notNull(),
     extension: varchar({ length: 10 }).notNull(),
     size: integer().notNull(),
-
     mime_type: text().notNull(),
     content_text: text().notNull(),
     char_count: integer().notNull(),

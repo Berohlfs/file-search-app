@@ -44,14 +44,17 @@ export const DeleteButton = ({ token, filename }: Props) => {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Delete {filename}</DialogTitle>
-                    <DialogDescription>
-                        Are you sure? This action is {' '}
-                        <span className={'text-destructive font-medium.'}>irreversible</span>.
-                    </DialogDescription>
+                    <DialogTitle>Delete File</DialogTitle>
                 </DialogHeader>
 
-                <DialogFooter>
+                <p className={'text-xs font-medium text-center italic my-5'}>{filename}</p>
+
+                <p className={'text-sm'}>
+                    Are you sure? This action is {' '}
+                    <span className={'text-destructive font-medium.'}>irreversible</span>.
+                </p>
+
+                <DialogFooter className={'flex-row justify-end'}>
                     <DialogClose asChild>
                         <Button
                             size={'sm'}
@@ -68,7 +71,7 @@ export const DeleteButton = ({ token, filename }: Props) => {
                         {pending ?
                             <>
                                 Deleting
-                                <CircularProgress />
+                                <CircularProgress color={'light'} />
                             </>
                             :
                             <>

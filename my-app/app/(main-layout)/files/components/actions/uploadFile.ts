@@ -8,11 +8,13 @@ import { s3 } from "@/db/s3-client"
 // Libs
 import { v4 as uuidv4 } from 'uuid'
 import { PutObjectCommand } from "@aws-sdk/client-s3"
-import { extractText, getDocumentProxy } from "unpdf"
+import { extractText } from "unpdf"
 // Validation
 import { upload_form_validation } from "@/validation/uploadFile"
 // Next
 import { revalidatePath } from "next/cache"
+// Utils
+import { sanitizeText } from "@/utils/sanitizeText"
 
 export const uploadFile = async (fd: FormData) => {
     try {
@@ -48,7 +50,7 @@ export const uploadFile = async (fd: FormData) => {
         const ab = await file.arrayBuffer()
         const abCloned = ab.slice(0)
         const bytes = new Uint8Array(abCloned)
-        const buf = Buffer.from(bytes) 
+        const buf = Buffer.from(bytes)
 
         let content_text = ''
         if (file.type === 'application/pdf') {
@@ -56,6 +58,17 @@ export const uploadFile = async (fd: FormData) => {
             content_text = text ?? ''
         } else {
             content_text = new TextDecoder('utf-8', { fatal: false }).decode(bytes)
+        }
+
+        content_text = sanitizeText(content_text, {
+            removeControlChars: true,
+            collapseSpaces: false,
+            collapseBlankLines: false,
+            maxCodepoints: null,
+        })
+
+        if (content_text.length < 1) {
+            return 'Could not extract text. This file may be a scanned document or image-only PDF.'
         }
 
         const token = uuidv4()

@@ -47,7 +47,7 @@ export const DownloadButton = ({ token, filename }: Props) => {
             variant={'ghost'}>
 
             {downloading ? 
-            <CircularProgress dark/> : 
+            <CircularProgress/> : 
             <Download />}
 
         </Button>
