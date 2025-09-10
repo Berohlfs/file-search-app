@@ -12,9 +12,10 @@ import { CircularProgress } from "@/app/components/CircularProgress"
 type Props = {
     token: string
     filename: string
+    variant?: 'icon-only' | 'full'
 }
 
-export const DownloadButton = ({ token, filename }: Props) => {
+export const DownloadButton = ({ token, filename, variant = 'icon-only' }: Props) => {
 
     const [downloading, setDownloading] = useState(false)
 
@@ -42,13 +43,21 @@ export const DownloadButton = ({ token, filename }: Props) => {
     return (
         <Button
             onClick={download}
-            size={'icon'}
+            size={variant === 'full' ? 'sm' : 'icon'}
             disabled={downloading}
+            className={variant === 'full' ? 'w-full' : ''}
             variant={'ghost'}>
 
-            {downloading ? 
-            <CircularProgress/> : 
-            <Download />}
+            {downloading ?
+                <>
+                    {variant === 'full' && 'Downloading'}
+                    <CircularProgress size={16}/>
+                </>
+                :
+                <>
+                    {variant === 'full' && 'Download File'}
+                    <Download />
+                </>}
 
         </Button>
     )

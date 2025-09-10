@@ -1,3 +1,213 @@
-export default async function Search() {
-    return <></>
+// Components
+import { SearchControl } from "./components/SearchControl"
+import { DownloadButton } from "../files/components/DownloadButton"
+// OpenAI
+import { openai } from "@/db/openai-client"
+// Drizzle
+import { db } from "@/db/db-client"
+import { and, desc, eq, ilike, or, sql } from "drizzle-orm"
+import { files } from "@/db/schema/files"
+import { file_chunks } from "@/db/schema/file_chunks"
+// Libs
+import pgvector from 'pgvector'
+// Shadcn
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+// Icons
+import { Sparkles } from "lucide-react"
+
+type Props = {
+    searchParams: Promise<{
+        q: string
+        semantic: string
+    }>
+}
+
+export default async function Search({ searchParams }: Props) {
+
+    const { q, semantic } = await searchParams
+
+    const valid_search = q && q.length > 3
+
+    let embedded_search_value: number[] | null = null
+
+    if (valid_search && semantic === 'on') {
+        const resp = await openai.embeddings.create({
+            model: "text-embedding-3-small",
+            input: [q],
+        })
+        embedded_search_value = pgvector.toSql(resp.data[0].embedding)
+    }
+
+    let semantic_search_data: {
+        id: number
+        token: string
+        title: string
+        preview: string
+        extension: string
+        distance: number
+    }[] | null = null
+
+    if (embedded_search_value) {
+        semantic_search_data = await db
+            .select({
+                id: file_chunks.id,
+                token: files.token,
+                title: files.title,
+                extension: files.extension,
+                preview: sql<string>`left(${file_chunks.content_text}, 220)`,
+                distance: sql<number>`${file_chunks.embedding} <-> ${embedded_search_value}`,
+            })
+            .from(file_chunks)
+            .innerJoin(files, eq(files.id, file_chunks.file_id))
+            .where(eq(files.status, 'Processed'))
+            .orderBy(sql`${file_chunks.embedding} <-> ${embedded_search_value}`)
+            .limit(6)
+    }
+
+    let traditional_search_data: {
+        id: number
+        token: string
+        title: string
+        preview: string
+        extension: string
+    }[] | null = null
+
+    if (valid_search) {
+        traditional_search_data = await db
+            .select({
+                id: file_chunks.id,
+                token: files.token,
+                file_id: file_chunks.file_id,
+                title: files.title,
+                extension: files.extension,
+                preview: sql<string>`left(${file_chunks.content_text}, 220)`,
+            })
+            .from(file_chunks)
+            .innerJoin(files, eq(files.id, file_chunks.file_id))
+            .where(and(
+                eq(files.status, 'Processed'),
+                or(
+                    ilike(file_chunks.content_text, `%${q}%`),
+                    ilike(files.title, `%${q}%`),
+                )
+            ))
+            .orderBy(desc(files.created_at))
+            .limit(6)
+    }
+
+    type PropsResultCard = {
+        title: string,
+        preview: string,
+        distance?: number,
+        highlight?: boolean
+        token: string
+        extension: string
+    }
+
+    const ResultCard = ({ title, preview, distance, highlight, token, extension }: PropsResultCard) => (
+        <article className={`rounded-lg border p-3 shadow-sm ${highlight ? 'border-chart-2/20 border-3' : ''}`}>
+            <div className={'flex items-center gap-2 justify-between'}>
+                <p className="text-sm font-medium">
+                    {title}
+                </p>
+                {highlight &&
+                    <Badge className={'bg-chart-2/20 text-chart-2 border-chart-2/20'}>
+                        Best match <Sparkles />
+                    </Badge>}
+            </div>
+
+            <p className="mt-3 text-xs text-muted-foreground">
+                {preview}…
+            </p>
+            {distance &&
+                <div className="mt-2 text-xs text-muted-foreground font-medium italic mb-1">
+                    Distance: {distance.toFixed(4)}
+                </div>}
+            <DownloadButton
+                variant={'full'}
+                filename={title + '.' + extension}
+                token={token} />
+        </article>
+    )
+
+
+    const NoResults = () => (
+        <div className={'h-20 flex justify-center items-center'}>
+            <p className={'text-muted-foreground text-sm'}>
+                No results
+            </p>
+        </div>
+    )
+
+    const GridWrapper = ({ children }: { children: React.ReactNode }) => (
+        <div className={'grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[calc(100vh-220px)] overflow-y-scroll mt-3'}>
+            {children}
+        </div>
+    )
+
+    return (
+        <section className={'mt-4'}>
+            <SearchControl>
+
+                {semantic === 'on' ?
+                    <Tabs defaultValue={'semantic'}>
+                        <TabsList className={'w-full'}>
+                            <TabsTrigger value="semantic">Semantic Search</TabsTrigger>
+                            <TabsTrigger value="traditional">Tradicional Search</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="semantic">
+
+                            {(semantic_search_data && semantic_search_data.length > 0) ?
+                                <GridWrapper>
+                                    {semantic_search_data.map((row, index) => (
+                                        <ResultCard
+                                            token={row.token}
+                                            extension={row.extension}
+                                            highlight={index === 0 ? true : false}
+                                            title={row.title}
+                                            distance={row.distance}
+                                            preview={row.preview}
+                                            key={row.id} />
+                                    ))}
+                                </GridWrapper>
+                                :
+                                <NoResults />}
+
+                        </TabsContent>
+                        <TabsContent value="traditional">
+
+                            {(traditional_search_data && traditional_search_data.length > 0) ?
+                                <GridWrapper>
+                                    {traditional_search_data.map((row) => (
+                                        <ResultCard
+                                            token={row.token}
+                                            extension={row.extension}
+                                            title={row.title}
+                                            preview={row.preview}
+                                            key={row.id} />
+                                    ))}
+                                </GridWrapper>
+                                :
+                                <NoResults />}
+
+                        </TabsContent>
+                    </Tabs>
+                    :
+                    (traditional_search_data && traditional_search_data.length > 0) ?
+                        <GridWrapper>
+                            {traditional_search_data.map((row) => (
+                                <ResultCard
+                                    token={row.token}
+                                    extension={row.extension}
+                                    title={row.title}
+                                    preview={row.preview}
+                                    key={row.id} />
+                            ))}
+                        </GridWrapper>
+                        :
+                        <NoResults />}
+            </SearchControl>
+        </section>
+    )
 }
