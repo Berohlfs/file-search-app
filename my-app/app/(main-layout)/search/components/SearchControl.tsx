@@ -89,7 +89,7 @@ export const SearchControl = ({ children }: Props) => {
                 id={'q'}
                 value={search_value}
                 onChange={(e) => { setSearchValue(e.target.value); debouncedSearch(e.target.value) }}
-                placeholder={'Search by file title, keywords, sentences, etc. At least 4 characters.'}
+                placeholder={'Search by keywords, sentences, etc. At least 4 characters.'}
                 className={'h-14'} />
         </div>
 
@@ -110,7 +110,7 @@ export const SearchControl = ({ children }: Props) => {
                 Embeddings are generated with OpenAI’s <em>text-embedding-3-small</em> model.
             </p>
             <p className="text-muted-foreground text-xs text-center">
-                <strong>Traditional search</strong> matches your query against file titles and content using <code>ILIKE</code>.
+                <strong>Traditional search</strong> matches your query against contents from every file using <code>ILIKE</code>.
             </p>
         </div>
     </>)

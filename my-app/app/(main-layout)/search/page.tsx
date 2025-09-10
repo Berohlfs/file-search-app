@@ -55,7 +55,7 @@ export default async function Search({ searchParams }: Props) {
                 token: files.token,
                 title: files.title,
                 extension: files.extension,
-                preview: sql<string>`left(${file_chunks.content_text}, 220)`,
+                preview: file_chunks.content_text,
                 distance: sql<number>`${file_chunks.embedding} <-> ${embedded_search_value}`,
             })
             .from(file_chunks)
@@ -81,16 +81,13 @@ export default async function Search({ searchParams }: Props) {
                 file_id: file_chunks.file_id,
                 title: files.title,
                 extension: files.extension,
-                preview: sql<string>`left(${file_chunks.content_text}, 220)`,
+                preview: file_chunks.content_text,
             })
             .from(file_chunks)
             .innerJoin(files, eq(files.id, file_chunks.file_id))
             .where(and(
                 eq(files.status, 'Processed'),
-                or(
-                    ilike(file_chunks.content_text, `%${q}%`),
-                    ilike(files.title, `%${q}%`),
-                )
+                ilike(file_chunks.content_text, `%${q}%`)
             ))
             .orderBy(desc(files.created_at))
             .limit(6)
@@ -106,25 +103,27 @@ export default async function Search({ searchParams }: Props) {
     }
 
     const ResultCard = ({ title, preview, distance, highlight, token, extension }: PropsResultCard) => (
-        <article className={`rounded-lg border p-3 shadow-sm ${highlight ? 'border-chart-2/20 border-3' : ''}`}>
-            <div className={'flex items-center gap-2 justify-between'}>
-                <p className="text-sm font-medium">
-                    {title}
+        <article className={`flex flex-col gap-2 justify-between rounded-lg border p-3 shadow-sm ${highlight ? 'border-chart-2/20 border-3' : ''}`}>
+            <div>
+                <div className={'flex items-center gap-2 justify-between'}>
+                    <p className="text-sm font-medium">
+                        {title}
+                    </p>
+                    {highlight &&
+                        <Badge className={'bg-chart-2/20 text-chart-2 border-chart-2/20'}>
+                            Best match <Sparkles />
+                        </Badge>}
+                </div>
+
+                <p className="mt-3 text-xs text-muted-foreground">
+                    {'"...'}<code>{preview}</code>{'..."'}
                 </p>
-                {highlight &&
-                    <Badge className={'bg-chart-2/20 text-chart-2 border-chart-2/20'}>
-                        Best match <Sparkles />
-                    </Badge>}
+                {distance &&
+                    <div className="mt-2 text-xs text-muted-foreground font-medium italic">
+                        Semantic Distance: {distance.toFixed(4)}
+                    </div>}
             </div>
 
-            <p className="mt-3 text-xs text-muted-foreground">
-                {preview}…
-            </p>
-            {distance &&
-                <div className="mt-2 text-xs text-muted-foreground font-medium italic">
-                    Distance: {distance.toFixed(4)}
-                </div>}
-            <div className={'mt-2'}/>
             <DownloadButton
                 variant={'full'}
                 filename={title + '.' + extension}
