@@ -7,18 +7,22 @@ This application allows users to **upload documents** — PDF or TXT — and **s
 ## 📝 Functional Requirements
 
 - User must be allowed to switch themes (dark <=> light). ✅
+- The front-end must implement smooth loading UIs. ✅
 - User must be able to upload PDF and TXT files — one at a time. ✅
 - The front-end must allow file selection via drag and drop. ✅
 - In order to upload, user has to type a title for the file with at least 5 characters. ✅
+- The app must block uploads for files larger than 4MB. ✅
 - The backend must block uploads for unsupported file types or "text-empty" PDFs (image-only or scanned documents). ✅
 - The back-end must extract and store the document's raw text content, on upload. ✅
 - The back-end must sanitize the extracted text before storing it. ✅
 - Files may live through 3 status: "Pending" (after upload), "Processed" (after embedding) and "Failed" in case embedding fails. ✅
 - The back-end must block embedding on files that aren't marked as "Pending". ✅
-- The back-end must implement database transactions on "multi-operation" and indivisible tasks to ensure atomicity (e.g., file uploads and file deletion involves a database mutation and an S3-client request — either both happen or none do). ✅
+- The back-end must implement database transactions on "multi-operation" and indivisible tasks to ensure atomicity (e.g., file upload or file deletion involve a database mutation and an S3-client request — either both happen or none do). ✅
 - The app must provide a listing page for all uploaded files, where users can request embedding for each file, as well as download or delete them. ✅
 - The frontend must implement a 'confirm deletion modal' to ensure safety and avoid accidental deletes. ✅
 - The 'Embed' button must display only on "Pending" file cards. ✅
+- The back-end must divide the file's raw text content into multiple chunks composed of around 300 tokens, to ensure semantic precision while balancing context length. ✅
+- All chunks must me embedded individually and store a vector and it's raw text.
 - The app must implement pagination on the files page. ✅
 - The app must offer a switch input to enable and disable semantic search. ✅
 - The search bar must submit the search value to the backend after a certain pause in activity/typing (debounce). ✅
@@ -32,7 +36,9 @@ This application allows users to **upload documents** — PDF or TXT — and **s
 
 ### Possible future implementations
 
-- System must offer an AI Chatbot to assist in search. 🚧⏳
+- App could offer an AI Chatbot to assist search. 🚧⏳
+- App could implement *OCR (Optical Character Recognition)*, to allow image-only/scanned documents. 🚧⏳
+- App could allow upload for multiple files at once. 🚧⏳
 
 ---
 
@@ -43,10 +49,12 @@ This application allows users to **upload documents** — PDF or TXT — and **s
 - TypeScript
 - Next.js (full-stack web framework)
 - Drizzle ORM
+- `@aws-sdk/client-s3` (to manage object storage)
 - Shadcn and tailwind (for UI)
 - `unpdf` (for PDF text extraction)
 - `@langchain/textsplitters` (for chunk splitting by token count)
-- `pgvector` (allows Drizzle to query embedded vectors)
+- `openai` (for embedding model usage)
+- `pgvector` (to store and query embedded vectors inside PostgreSQL)
 - `lucide-react` (icons collection)
 - `next-themes` (for handling dark mode)
 - React Hook Form and Zod (for form control and validation)
@@ -71,7 +79,7 @@ Instead of using it's SDK, I accessed the Supabase Dashboard and grabbed the cre
 
 For this project, I needed an **embedding model** to vectorize the contents extracted from every uploaded file, allowing me the semantically search their contents by also embedding the search value. I chose OpenAI because I already had familiarity with some of it's services, but I intend to explore new options in the future!
 
-OpenAI offers two main embedding models the day I'm writing this — well, 3 if you include `text-embedding-ada-002`, but OpenAI explicitly recommends migrating to the `text-embedding-3` series for cost/performance. The two reccomended current models are:
+OpenAI offers two main embedding models on the day I'm writing this paragraph — well, 3 if you include `text-embedding-ada-002`, but OpenAI explicitly recommends migrating to the `text-embedding-3` series for cost/performance. The two reccomended current models are:
 
 - `text-embedding-3-small`
 - `text-embedding-3-large`
@@ -94,7 +102,7 @@ Click [here](https://filesearch.bernardorohlfs.com) to visit the demo, hosted on
 
 ## 💻 Run locally
 
-To run this project locally, besides needing to have **Node.js** installed on your machine, you will also need the following environment variables:
+To run this project locally, besides needing **Node.js** installed on your machine, you will also need the following environment variables:
 
 ```
 DATABASE_URL=""
@@ -143,7 +151,7 @@ The delete modal is a safety guard. It helps prevent accidental deletions by cre
 
 ### File Upload Page
 
-The **file upload page** aims to offer high quality UI. The drag and drop design brings familiarity, and helps the user easily comprehend the use case. An input field was placed to overwrite the file's title. It allows the user to type a new and more pleasant title. It's important to note that scanned documents or image-only PDFs cannot be uploaded, since their text cannot be extracted without *OCR (Optical Character Recognition)*, tho this could be a cool feature in the future.
+The **file upload page** aims to offer high quality UI. The drag and drop design brings familiarity, and helps the user easily comprehend the use case. An input field was placed to overwrite the file's title. It allows the user to type a new and more pleasant title. It's important to note that image-only/scanned PDFs cannot be uploaded, since their text cannot be extracted without *OCR (Optical Character Recognition)*, tho this could be a cool feature in the future.
 
 ![File Upload Page](./images/file-upload-page.png)
 
@@ -155,7 +163,7 @@ The app implements two strategies: traditional search and semantic search.
 
 | Method | How it works | Pros | Cons |
 | --- | --- | --- | --- |
-| Semantic Search | When a user types something in the search bar, the submitted search value, just like the files' chunks, is embedded. We then use postgreSQL's `vector` extension to analyse and measure the semantic distance — Cosine distance — between the search value and all the chunks, in order the find the chunk with the best match. | Does not realy on exact match. Allows user to search for keywords, sentences and ideas with freedom. | It's less precise with exact matches and can sometimes return irrelevant results. Besides, it adds cost and complexity |
+| Semantic Search | When a user types something in the search bar, the submitted search value, just like the files' chunks, is embedded. We then use postgreSQL's `pgvector` extension to analyse and measure the semantic distance — Cosine distance — between the search value and all the chunks, in order the find the chunk with the best match. | Does not realy on exact match. Allows user to search for keywords, sentences and ideas with freedom. | It's less precise with exact matches and can sometimes return irrelevant results. Besides, it adds cost and complexity |
 | Traditional Search | In this method, the search value is not embedded. Instead, the method matches the search value against all chunks' raw text contents using SQL's ILIKE operator | Excellent with precise searches. Either the user gets exactly what they want, or nothing at all. It also offers more perfomance and less complexity and cost. | Very strict. User can't rely on semantic meaning to find contents that looser in their heads. | 
 
 With all that said, the user can switch the **semantic search** option on and off whenever they please. They are also allowed to download or preview the file related to each chunk.
