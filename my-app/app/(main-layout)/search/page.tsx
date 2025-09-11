@@ -68,12 +68,12 @@ export default async function Search({ searchParams }: Props) {
                 title: files.title,
                 extension: files.extension,
                 preview: file_chunks.content_text,
-                distance: sql<number>`${file_chunks.embedding} <-> ${embedded_search_value}`,
+                distance: sql<number>`${file_chunks.embedding} <=> ${embedded_search_value}`,
             })
             .from(file_chunks)
             .innerJoin(files, eq(files.id, file_chunks.file_id))
             .where(eq(files.status, 'Processed'))
-            .orderBy(sql`${file_chunks.embedding} <-> ${embedded_search_value}`)
+            .orderBy(sql`${file_chunks.embedding} <=> ${embedded_search_value}`)
             .limit(6)
     }
 
@@ -128,7 +128,7 @@ export default async function Search({ searchParams }: Props) {
                         </Badge>}
                 </div>
 
-                <p className="mt-3 text-xs text-muted-foreground">
+                <p className="mt-3 text-xs text-muted-foreground overflow-hidden">
                     {'"...'}<code>{preview}</code>{'..."'}
                 </p>
                 {distance &&
