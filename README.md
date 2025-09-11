@@ -1,6 +1,38 @@
 # 📄🔍 File Search App
 
-This application allows users to upload documents and search inside their contents via traditional and semantic search methods, with a smooth and intuitive experience.
+This application allows users to **upload documents** — PDF or TXT — and **search their contents** via **traditional and semantic search** methods, with a smooth and intuitive experience.
+
+---
+
+## 📝 Functional Requirements
+
+- User must be allowed to switch themes (dark <=> light). ✅
+- User must be able to upload PDF and TXT files — one at a time. ✅
+- The front-end must allow file selection via drag and drop. ✅
+- In order to upload, user has to type a title for the file with at least 5 characters. ✅
+- The backend must block uploads for unsupported file types or "text-empty" PDFs (image-only or scanned documents). ✅
+- The back-end must extract and store the document's raw text content, on upload. ✅
+- The back-end must sanitize the extracted text before storing it. ✅
+- Files may live through 3 status: "Pending" (after upload), "Processed" (after embedding) and "Failed" in case embedding fails. ✅
+- The back-end must block embedding on files that aren't marked as "Pending". ✅
+- The back-end must implement database transactions on "multi-operation" and indivisible tasks to ensure atomicity (e.g., file uploads and file deletion involves a database mutation and an S3-client request — either both happen or none do). ✅
+- The app must provide a listing page for all uploaded files, where users can request embedding for each file, as well as download or delete them. ✅
+- The frontend must implement a 'confirm deletion modal' to ensure safety and avoid accidental deletes. ✅
+- The 'Embed' button must display only on "Pending" file cards. ✅
+- The app must implement pagination on the files page. ✅
+- The app must offer a switch input to enable and disable semantic search. ✅
+- The search bar must submit the search value to the backend after a certain pause in activity/typing (debounce). ✅
+- The back-end must perform semantic content search by calculating the cosine distance between the embedded search value and the embedded file chunks. ✅
+- The back-end must perform traditional content search via SQL's ILIKE operator. ✅
+- The app must limit the search result chunk amount to 6 for each approach (semantic and traditional). ✅
+- On the search page, the front-end must provide a preview link for each chunk, that points to it's file's public URL.
+- On the front-end, the semantic search tab must display the cosine distance for each chunk. ✅
+- On the back-end, the semantic search must order the chunks by cosine distance. ✅
+- The front-end must highlight the semantic search result with the best match (smallest distance to the search value). ✅
+
+### Possible future implementations
+
+- System must offer an AI Chatbot to assist in search. 🚧⏳
 
 ---
 
@@ -11,23 +43,46 @@ This application allows users to upload documents and search inside their conten
 - TypeScript
 - Next.js (full-stack web framework)
 - Drizzle ORM
-- React Hook Form and Zod (for form validation)
-- Shadcn (UI components)
+- Shadcn and tailwind (for UI)
+- `unpdf` (for PDF text extraction)
+- `@langchain/textsplitters` (for chunk splitting by token count)
+- `pgvector` (allows Drizzle to query embedded vectors)
+- `lucide-react` (icons collection)
+- `next-themes` (for handling dark mode)
+- React Hook Form and Zod (for form control and validation)
+- `react-dropzone` (for handling drag and drop)
+- `dayjs` (for date handling)
   
 ### Infrastructure and Architecture
 
-#### Vercel 
+#### ➤ Vercel 
 
+Vercel offers a free plan (Hobby), perfect for hosting Next.js applications, specially MVPs and small projects. I chose to deploy this project there because it's extremely easy to configure. You just need to log in with your GitHub account, create a new project, and point it to the desired Git repository. This way, the CI/CD pipeline is automatically applied.
 
+Vercel's Hobby plan also offers domain configuration, logs visualization, caching and a cron job feature!
 
-#### Supabase
+#### ➤ Supabase
 
+Supabase is a BaaS platforma that is frequently used in projects via it's SDK, for managing SQL data, file storage, authentication, real-time features and more. However, for this application, Next.js took the role as the backend, and Supabase's abstraction was disolved a bit. 
 
+Instead of using it's SDK, I accessed the Supabase Dashboard and grabbed the credentials and secrets of each service that I was gonna use (PostgreSQL database and S3 compatible object storage), allowing me to use a more independent and robust ORM in Drizzle, and a universal S3 client in `@aws-sdk/client-s3`. This gave me more freedom, and it also allows me to eventually switch to new DB and storage providers without changing the source code!
 
-#### OpenAI
+#### ➤ OpenAI's API Platfom
 
+For this project, I needed an **embedding model** to vectorize the contents extracted from every uploaded file, allowing me the semantically search their contents by also embedding the search value. I chose OpenAI because I already had familiarity with some of it's services, but I intend to explore new options in the future!
 
+OpenAI offers two main embedding models the day I'm writing this — well, 3 if you include `text-embedding-ada-002`, but OpenAI explicitly recommends migrating to the `text-embedding-3` series for cost/performance. The two reccomended current models are:
 
+- `text-embedding-3-small`
+- `text-embedding-3-large`
+
+[Overview of available models.](https://platform.openai.com/docs/guides/embeddings/embedding-models?utm_source=chatgpt.com)
+[Benchmark numbers, pricing, and feature differences.](https://openai.com/index/new-embedding-models-and-api-updates/?utm_source=chatgpt.com)
+
+I chose `text-embedding-3-small` for the following reasons:
+
+1. It is about 2 to 3 times faster per request than `3-large` and about 6x cheaper.
+1. 
 
 ---
 
@@ -61,17 +116,6 @@ cd my-app
 npm install
 npm run dev
 ```
-
----
-
-## 📝 Functional Requirements
-
-- User must be able to upload PDF and TXT files. ✅
-- System must provide upload option via drag and drop. ✅
-
-for the future...
-
-- System must offer an AI Chatbot to assist in search. 🚧⏳
 
 ---
 
