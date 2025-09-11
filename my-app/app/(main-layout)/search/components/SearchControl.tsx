@@ -107,7 +107,7 @@ export const SearchControl = ({ children }: Props) => {
             <p className="text-muted-foreground text-xs text-center">
                 <strong>Semantic search</strong> turns your query into a vector and compares it to
                 vectors of small text chunks from every file using <code>pgvector</code>.
-                All vector embedding are generated with OpenAI’s <em>text-embedding-3-small</em> model.
+                All vector embeddings are generated with OpenAI’s <em>text-embedding-3-small</em> model.
             </p>
             <p className="text-muted-foreground text-xs text-center">
                 <strong>Traditional search</strong> matches your query against contents from every file using <code>ILIKE</code>.

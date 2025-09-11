@@ -47,7 +47,7 @@ export const DeleteButton = ({ token, filename }: Props) => {
                     <DialogTitle>Delete File</DialogTitle>
                 </DialogHeader>
 
-                <p className={'text-xs font-medium text-center italic my-5'}>{filename}</p>
+                <p className={'text-xs font-medium text-center italic my-5 truncate min-w-0'}>{filename}</p>
 
                 <p className={'text-sm'}>
                     Are you sure? This action is {' '}
