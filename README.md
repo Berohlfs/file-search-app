@@ -29,7 +29,7 @@ This application allows users to **upload documents** — PDF or TXT — and **s
 - The back-end must perform semantic content search by calculating the cosine distance between the embedded search value and the embedded file chunks. ✅
 - The back-end must perform traditional content search via SQL's ILIKE operator. ✅
 - The app must limit the number of result chunks to 6 for each approach (semantic and traditional). ✅
-- On the search page, the front-end must provide a preview link for each chunk that points to its file's public URL.
+- On the search page, the front-end must provide a preview link for each chunk that points to its file's public URL. ✅
 - On the front-end, the semantic search tab must display the cosine distance for each chunk. ✅
 - On the back-end, the semantic search must order the chunks by cosine distance. ✅
 - The front-end must highlight the semantic search result with the best match (smallest distance to the search value). ✅
@@ -131,7 +131,6 @@ npm install
 npm run dev
 ```
 
-
 ---
 
 ## 🖼️ Pages and Features
@@ -146,7 +145,7 @@ Welcome! For the **home page**, I decided to go with a more minimalistic approac
 
 The **files page** displays the file catalog. The idea was to make this page as simple and straightforward as possible, elegant and subtle. The user can download or delete any file they want. Uploaded files enter the database with a 'Pending' status. This means the file has been stored, and its contents have already been extracted to raw text and saved; however, the text has yet to be embedded. 
 
-That's where the **Embed** button comes in. When this button is clicked, the back end divides the file's raw text into multiple chunks of around 300 tokens and sends them to OpenAI's **text-embedding-3-small** model. OpenAI returns the vectorized representation of each chunk. The chunks are then stored as both raw text and vectors. After all this, the status changes to 'Processed'.
+That's where the **Embed** button comes in. When this button is clicked, the back end divides the file's raw text into multiple chunks of around 300 tokens and sends them to OpenAI's `text-embedding-3-small` model. OpenAI returns the vectorized representation of each chunk. The chunks are then stored as both raw text and vectors. After all this, the status changes to 'Processed'.
 
 ![Files Page](./images/files-page.png)
 
