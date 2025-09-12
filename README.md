@@ -11,7 +11,7 @@ This application allows users to **upload documents** — PDF or TXT — and **s
 - Users must be able to upload PDF and TXT files — one at a time. ✅
 - The front-end must allow file selection via drag and drop. ✅
 - To upload, the user has to enter a title for the file with at least 5 characters. ✅
-- The app must block uploads for files larger than 4MB. ✅
+- The app must block uploads for files larger than 4 MB. ✅
 - The back-end must block uploads for unsupported file types or "text-empty" PDFs (image-only or scanned documents). ✅
 - The back-end must extract and store the document's raw text content upon upload. ✅
 - The back-end must sanitize the extracted text before storing it. ✅
@@ -20,24 +20,24 @@ This application allows users to **upload documents** — PDF or TXT — and **s
 - The back-end must implement database transactions on multi-operation, indivisible tasks to ensure atomicity (e.g., a file upload or file deletion involves a database mutation and an S3 client request — either both happen or neither does). ✅
 - The app must provide a listing page for all uploaded files, where users can request embedding for each file, as well as download or delete them. ✅
 - The front-end must implement a 'confirm deletion modal' to ensure safety and avoid accidental deletions. ✅
-- The 'Embed' button must appear only on "Pending" file cards. ✅
+- The "Embed" button must appear only on "Pending" file cards. ✅
 - The back-end must divide the file's raw text content into multiple chunks composed of around 300 tokens to ensure semantic precision while balancing context length. ✅
 - All chunks must be embedded individually and have a vector and their raw text stored. ✅
 - The app must implement pagination on the files page. ✅
 - The app must offer a switch input to enable or disable semantic search. ✅
-- The search bar must submit the search value to the back end after a short pause in typing (debounce). ✅
+- The search bar must submit the search value to the back-end after a short pause in typing (debounce). ✅
 - The back-end must perform semantic content search by calculating the cosine distance between the embedded search value and the embedded file chunks. ✅
-- The back-end must perform traditional content search via SQL's ILIKE operator. ✅
+- The back-end must perform traditional content search via SQL's `ILIKE` operator. ✅
 - The app must limit the number of result chunks to 6 for each approach (semantic and traditional). ✅
 - On the search page, the front-end must provide a preview link for each chunk that points to its file's public URL. ✅
 - On the front-end, the semantic search tab must display the cosine distance for each chunk. ✅
 - On the back-end, the semantic search must order the chunks by cosine distance. ✅
-- The front-end must highlight the semantic search result with the best match (smallest distance to the search value). ✅
+- On the semantic search tab, the front-end must highlight the chunk with the best match (smallest distance to the search value). ✅
 
 ### Possible future implementations
 
 - The app could offer an AI Chatbot to assist search. 🚧⏳
-- The app could implement *OCR (Optical Character Recognition)* to allow image-only/scanned documents. 🚧⏳
+- The app could implement *OCR (Optical Character Recognition)* to allow the upload of image-only/scanned documents. 🚧⏳
 - The app could allow upload for multiple files at once. 🚧⏳
 
 ---
@@ -71,7 +71,7 @@ Vercel's Hobby plan also offers domain configuration, log visualization, caching
 
 #### ➤ Supabase
 
-Supabase is a BaaS platform that is frequently used in projects via its SDK for managing SQL data, file storage, authentication, real-time features, and more. However, for this application, Next.js took the role of the back end, and Supabase's abstraction was somewhat dissolved. 
+Supabase is a BaaS platform that is frequently used in projects via its SDK for managing SQL data, file storage, authentication, real-time features, and more. However, for this application, Next.js took the role of the back-end, and Supabase's abstraction was somewhat dissolved. 
 
 Instead of using its SDK, I accessed the Supabase Dashboard and grabbed the credentials and secrets of each service that I was going to use (PostgreSQL database and S3-compatible object storage), allowing me to use a more independent and robust ORM in Drizzle, and a universal S3 client in `@aws-sdk/client-s3`. This gave me more freedom, and it also allows me to eventually switch to new DB and storage providers without changing the source code!
 
@@ -143,9 +143,9 @@ Welcome! For the **home page**, I decided to go with a more minimalistic approac
 
 ### Files Page
 
-The **files page** displays the file catalog. The idea was to make this page as simple and straightforward as possible, elegant and subtle. The user can download or delete any file they want. Uploaded files enter the database with a 'Pending' status. This means the file has been stored, and its contents have already been extracted to raw text and saved; however, the text has yet to be embedded. 
+The **files page** displays the file catalog. The idea was to make this page as simple and straightforward as possible, elegant and subtle. The user can download or delete any file they want. Uploaded files enter the database with a "Pending" status. This means the file has been stored, and its contents have already been extracted to raw text and saved. However, the text has yet to be embedded. 
 
-That's where the **Embed** button comes in. When this button is clicked, the back end divides the file's raw text into multiple chunks of around 300 tokens and sends them to OpenAI's `text-embedding-3-small` model. OpenAI returns the vectorized representation of each chunk. The chunks are then stored as both raw text and vectors. After all this, the status changes to 'Processed'.
+That's where the **Embed** button comes in. When this button is clicked, the back-end divides the file's raw text into multiple chunks of around 300 tokens and sends them to OpenAI's `text-embedding-3-small` model. OpenAI returns the vectorized representation of each chunk. The chunks are then stored as both raw text and vectors. After all this, the status changes to 'Processed'.
 
 ![Files Page](./images/files-page.png)
 
@@ -170,9 +170,9 @@ The app implements two strategies: traditional search and semantic search.
 | Method | How it works | Pros | Cons |
 | --- | --- | --- | --- |
 | Semantic Search | When a user types something in the search bar, the submitted search value, just like the files' chunks, is embedded. We then use PostgreSQL's `pgvector` extension to analyze and measure the semantic distance — cosine distance — between the search value and all the chunks in order to find the chunk with the best match. | Does not rely on exact matches. Allows the user to search for keywords, sentences, and ideas with freedom. | It's less precise with exact matches and can sometimes return irrelevant results. Besides, it adds cost and complexity. |
-| Traditional Search | In this method, the search value is not embedded. Instead, the method matches the search value against all chunks' raw text contents using SQL's ILIKE operator. | Excellent with precise searches. Either the user gets exactly what they want, or nothing at all. It also offers more performance and lower complexity and cost. | Very strict. The user can't rely on semantic meaning to find content that is less clearly defined in their minds. | 
+| Traditional Search | In this method, the search value is not embedded. Instead, it is matched against all chunks' raw text contents using SQL's `ILIKE` operator. | Excellent with precise searches. Either the user gets exactly what they want, or nothing at all. It also offers more performance and lower complexity and cost. | Very strict. The user can't rely on semantic meaning to find content that is less clearly defined in their minds. | 
 
-With all that said, the user can switch the **semantic search** option on and off whenever they please. They are also allowed to download or preview the file related to each chunk.
+With all that said, the combination of both methods is the best overall approach, since each brings distinct advantages to the table. This app allows the user to switch the semantic search option on and off whenever they please. They can also download or preview the file related to each chunk.
 
 ![Search Page 01](./images/search-page-1.png)
 
@@ -188,11 +188,11 @@ The database itself is pretty simple. Two tables: `files` and `file_chunks`.
 
 ### The `files` Table
 
-As I've mentioned, a new file row is created upon upload as 'Pending' — the status column is an enumerated type that can be 'Pending', 'Processed', or 'Failed'. In this same step, the file's raw text content is extracted and saved, and a copy is sent to an S3-compatible bucket called 'files'. The `files` table also immediately stores the following:
+As I've mentioned, a new file row is created upon upload as "Pending" — the status column is an enumerated type that can be "Pending", "Processed", or "Failed". In this same step, the file's raw text content is extracted and saved, and a copy of the file is sent to an S3-compatible bucket called "files". The `files` table also immediately stores the following:
 
 - `title`
 - `size` (in bytes)
-- `bucket ref` (points to the file copy stored in the S3 bucket)
+- `bucket_ref` (points to the file copy stored in the S3 bucket)
 - `extension`
 - `mime_type`
 - `content_text` (full extracted raw text)
@@ -200,4 +200,8 @@ As I've mentioned, a new file row is created upon upload as 'Pending' — the st
 
 ### The `file_chunks` Table
 
-The **file_chunks** table gets new rows every time a user clicks on the 'Embed' button on the files page. Firstly, the chunks are created from the file's raw text content in memory, then sent to OpenAI's **text-embedding-3-small** model. After all embeddings are returned, all chunks are "bulk-inserted" into the database, storing raw text and vectors.
+The `file_chunks` table gets new rows every time a user clicks on the "Embed" button on the files page. Firstly, the chunks are created from the file's raw text content in memory, then sent to OpenAI's `text-embedding-3-small` model. After all embeddings are returned, all chunks are "bulk-inserted" into the database, storing raw text and vectors.
+
+---
+
+**Thanks for reading! 💡🚀**
