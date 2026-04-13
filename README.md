@@ -1,4 +1,4 @@
-# 📄🔍 File Search App
+# File Search App
 
 This application allows users to **upload documents** — PDF or TXT — and **search their contents** via **traditional and semantic search** methods, with a smooth and intuitive experience.
 
